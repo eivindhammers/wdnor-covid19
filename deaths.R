@@ -31,8 +31,7 @@ totals <- deaths %>%
          deaths = ifelse(year == 2020 & week == update_week - 3, deaths / 0.85, deaths),
          point_type = case_when(year == 2020 & week < update_week - 3 ~ "2020",
                                 year == 2020 & week >= update_week - 3 ~ "2020 preliminary",
-                                year < 2020 ~ "2000--2019"),
-         year_2020 = ifelse(year == 2020, TRUE, FALSE))
+                                year < 2020 ~ "2000--2019"))
 
 # Scatter with colors
 ggplot(totals, aes(x = week, y = deaths)) +
