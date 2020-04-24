@@ -4,8 +4,6 @@ library(PxWebApiData)
 library(lubridate)
 library(ggplot2)
 
-palette(c("black", "#DF536B", "#61D04F", "#2297E6", "#28E2E5", "#CD0BBC", "#EEC21F", "gray62"))
-
 # Data updated Tuesdays at 8 AM
 update_week <- floor_date(Sys.Date(), unit = "week", week_start = 2) %>%
   strftime(., format = "%V") %>%
@@ -40,11 +38,11 @@ totals <- deaths %>%
 ggplot(totals, aes(x = week, y = deaths)) +
   geom_point(aes(color = point_type, shape = point_type)) +
   geom_smooth(data = filter(totals, point_type != "2000--2019"),
-              color = "#df536b") +
-  scale_color_manual(name = "", values = c("gray62", "#df536b", "#df536b")) +
+              color = 2) +
+  scale_color_manual(name = "", values = c(8, 2, 2)) +
   scale_shape_manual(name = "", values = c(1, 16, 1)) +
-  geom_vline(xintercept = lockdown_week, color = "#df536b") +
-  annotate("text", x = 12, y = 1250, label = "Lockdown", color = "#df536b") +
+  geom_vline(xintercept = lockdown_week, color = 2) +
+  annotate("text", x = 12, y = 1250, label = "Lockdown", color = 2) +
   coord_cartesian(ylim = c(550, 1200), clip = "off") +
   theme_minimal() +
   theme(legend.position = c(0.8, 0.8), plot.margin = margin(t = 15))
