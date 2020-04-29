@@ -12,7 +12,7 @@ update_week <- floor_date(Sys.Date(), unit = "week", week_start = 2) %>%
 lockdown_week <- 12
 
 # Read data from SSB API, format, remove future weeks and week 53
-deaths <- ApiData(07995, ContentsCode = "Dode1", Kjonn = 2:3, Alder = 1:104, Uke = 1:53, Tid = as.character(2000:2020)) %>%
+wdnor <- ApiData(07995, ContentsCode = "Dode1", Kjonn = 2:3, Alder = 1:104, Uke = 1:53, Tid = as.character(2000:2020)) %>%
   `[[`(1) %>%
   rename(deaths = value) %>%
   mutate(age = as.numeric(str_remove(alder, " år")),
@@ -24,7 +24,7 @@ deaths <- ApiData(07995, ContentsCode = "Dode1", Kjonn = 2:3, Alder = 1:104, Uke
          week != 53)
 
 # Sum over all ages and genders, adjust preliminary numbers for the two weeks prior
-totals <- deaths %>%
+totals <- wdnor %>%
   group_by(week, year) %>%
   summarize(deaths = sum(deaths)) %>%
   mutate(deaths = ifelse(year == 2020 & week == update_week - 2, deaths / 0.65, deaths),
