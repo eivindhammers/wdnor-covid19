@@ -17,6 +17,9 @@ thematic_on(
 wdall <- bind_rows(wdnor, wdswe, wdfin, wddnk) %>%
   filter(year >= 2015)
 
+# Check latest weeks of data for each country
+wdall %>% filter(year == 2020) %>% xtabs(~country + week, data = .)
+
 # Scatter with loess estimate and confidence interval
 ggplot(wdall, aes(x = week, y = deaths_per100k, 
                   color = country)) +
