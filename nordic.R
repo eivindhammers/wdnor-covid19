@@ -31,7 +31,6 @@ ggplot(wdall, aes(x = week, y = deaths_per100k,
   geom_smooth(data = filter(wdall, point_type == "2020"), se = TRUE) + 
   geom_smooth(data = filter(wdall, point_type != "2020"), linetype = "dashed", se = FALSE) 
   
-
 # Scatter with loess estimate, no confidence interval
 ggplot(wdall, aes(x = week, y = deaths_per100k, 
                   color = country, alpha = point_type)) +

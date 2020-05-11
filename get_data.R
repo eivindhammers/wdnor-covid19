@@ -46,6 +46,16 @@ wdnor <- ApiData(07995, ContentsCode = "Dode1", Kjonn = 2:3, Alder = 1:104,
   mutate(deaths_per100k = 100000 * deaths / population)
 
 # Sweden ----
+# Population
+urlswe_pop <- "http://api.scb.se/OV0104/v1/doris/en/ssd/BE/BE0101/BE0101A/BefolkningR1860"
+reqswe_pop <- '{"query":[{"code":"ContentsCode","selection":{"filter":"item","values":["BE0101C£"]}},{"code":"Tid","selection":{"filter":"item","values":["2014","2015","2016","2017","2018","2019"]}}],"response":{"format":"json"}}'
+popswe_list <- pxweb_get(url = urlswe_pop, query = reqswe_pop)
+
+popswe <- popswe_list %>%
+  as.data.frame(column.name.type = "text", variable.value.type = "text") %>%
+  setNames(c("year", "population")) %>%
+  mutate(year = as.integer(year) + 1L) # 31 dec numbers, so assign to next year
+
 tmp <- tempfile(".xlsx")
 urlswe <- "https://www.scb.se/en/finding-statistics/statistics-by-subject-area/population/population-composition/population-statistics/pong/tables-and-graphs/preliminary-statistics-on-deaths/"
 download.file(urlswe, tmp)
@@ -69,7 +79,9 @@ wdswe <- read_xlsx(tmp, sheet = "Tabell 1", skip = 6) %>%
          year >= 2015) %>%
   group_by(year, week, point_type, country) %>%
   summarize(deaths = sum(deaths, na.rm = TRUE)) %>%
-  filter(deaths != 0)
+  filter(deaths != 0) %>%
+  left_join(popswe, by = "year") %>%
+  mutate(deaths_per100k = 100000 * deaths / population)
 
 # Denmark ----
 urldnk_pop <- "https://api.statbank.dk/v1/data/BEF5/CSV?valuePresentation=Value&delimiter=Tab&Tid=*"
