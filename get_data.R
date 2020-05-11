@@ -1,11 +1,12 @@
 library(dplyr)
 library(tidyr)
 library(stringr)
-library(PxWebApiData)
 library(lubridate)
 library(readxl)
 library(httr)
 library(jsonlite)
+library(pxweb)
+library(PxWebApiData)
 
 # Norway ----
 # Norwegian data updated Tuesdays at 8 AM
@@ -38,7 +39,7 @@ wdnor <- ApiData(07995, ContentsCode = "Dode1", Kjonn = 2:3, Alder = 1:104,
   mutate(deaths = ifelse(year == 2020 & week == update_week - 2, deaths / 0.65, deaths),
          deaths = ifelse(year == 2020 & week == update_week - 3, deaths / 0.85, deaths),
          point_type = case_when(year == 2020 & week < update_week - 3 ~ "2020",
-                                year == 2020 & week >= update_week - 3 ~ "2020 preliminary",
+                                year == 2020 & week >= update_week - 3 ~ "2020",
                                 year < 2020 ~ "2015--2019"),
          country = "Norway") %>%
   left_join(popnor, by = "year") %>%
@@ -46,21 +47,29 @@ wdnor <- ApiData(07995, ContentsCode = "Dode1", Kjonn = 2:3, Alder = 1:104,
 
 # Sweden ----
 tmp <- tempfile(".xlsx")
-urlswe <- "https://www.socialstyrelsen.se/globalassets/sharepoint-dokument/dokument-webb/statistik/statistik-socialstyrelsen"
+urlswe <- "https://www.scb.se/en/finding-statistics/statistics-by-subject-area/population/population-composition/population-statistics/pong/tables-and-graphs/preliminary-statistics-on-deaths/"
 download.file(urlswe, tmp)
 
-wdswe <- read_xlsx(tmp, sheet = "Tabell B", skip = 4) %>%
-  select("Vecka", as.character(2015:2020)) %>%
-  filter(row_number() <= 53) %>%
-  pivot_longer(cols = as.character(2015:2020), names_to = "year", values_to = "deaths_per100k") %>%
-  mutate(week = as.integer(Vecka),
+wdswe <- read_xlsx(tmp, sheet = "Tabell 1", skip = 6) %>%
+  select("DagMånad", as.character(2015:2020)) %>%
+  filter(DagMånad != "Okänd dödsdag") %>%
+  mutate(month = str_sub(str_split_fixed(DagMånad, " ", n = 2)[, 2], 1, 3),
+         month = replace(month, month == "maj", "may"),
+         month = replace(month, month == "okt", "oct"),
+         day = str_split_fixed(DagMånad, " ", n = 2)[, 1]) %>%
+  pivot_longer(cols = as.character(2015:2020), names_to = "year", values_to = "deaths") %>%
+  mutate(date = as_date(paste(year, month, day, sep = "-")),
+         week = as.integer(isoweek(date)),
          year = as.integer(year),
          point_type = ifelse(year == 2020, "2020", "2015--2019"),
          country = "Sweden") %>%
-  filter(!(is.na(deaths_per100k) & year == 2020),
+  filter(!is.na(date),
+         !(is.na(deaths) & year == 2020),
          week < 53,
          year >= 2015) %>%
-  select(-Vecka)
+  group_by(year, week, point_type, country) %>%
+  summarize(deaths = sum(deaths, na.rm = TRUE)) %>%
+  filter(deaths != 0)
 
 # Denmark ----
 urldnk_pop <- "https://api.statbank.dk/v1/data/BEF5/CSV?valuePresentation=Value&delimiter=Tab&Tid=*"
@@ -104,8 +113,7 @@ urlfin <- "https://pxnet2.stat.fi:443/PXWeb/api/v1/en/Kokeelliset_tilastot/vamuu
 
 weeks <- crossing(year = 2015:2020, week = 1:53) %>%
   mutate(week_fmt = paste(year, str_pad(week, width = 2, pad = "0"), sep = "W")) %>%
-  filter(!(week > 14 & year == 2020),
-         !(week == 53 & year != 2015)) %>%
+  filter(!(week == 53 & year != 2015)) %>%
   pull(week_fmt) %>%
   paste(collapse = '","')
 

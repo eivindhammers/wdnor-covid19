@@ -4,11 +4,18 @@ library(stringr)
 library(lubridate)
 library(ggplot2)
 library(readxl)
+library(thematic)
+
+source("get_data.R")
+
+thematic_on(
+  bg = "#222222", fg = "white", accent = "#0CE3AC",
+  font = font_spec("Helvetica", scale = 1.25)
+)
 
 # All countries
 wdall <- bind_rows(wdnor, wdswe, wdfin, wddnk) %>%
-  filter(year >= 2015,
-         !(week >= 14 & year == 2020))
+  filter(year >= 2015)
 
 # Scatter with loess estimate and confidence interval
 ggplot(wdall, aes(x = week, y = deaths_per100k, 
@@ -17,8 +24,8 @@ ggplot(wdall, aes(x = week, y = deaths_per100k,
   scale_shape_manual(name = "", values = c(1, 16)) +
   scale_color_discrete(name = "") +
   geom_smooth(data = filter(wdall, point_type == "2020"), se = TRUE) + 
-  geom_smooth(data = filter(wdall, point_type != "2020"), linetype = "dashed", se = FALSE) +
-  theme_minimal()
+  geom_smooth(data = filter(wdall, point_type != "2020"), linetype = "dashed", se = FALSE) 
+  
 
 # Scatter with loess estimate, no confidence interval
 ggplot(wdall, aes(x = week, y = deaths_per100k, 
@@ -36,3 +43,13 @@ ggplot(wdall, aes(x = week, y = deaths_per100k,
   theme(legend.position = c(0.6, 0.8), plot.margin = margin(15, 5, 5, 5), 
         legend.box = "horizontal")
 
+# Faceted plot
+ggplot(wdall, aes(x = week, y = deaths_per100k, 
+                  color = country)) +
+  geom_point(aes(shape = point_type)) +
+  guides(shape = guide_legend(override.aes = list(color = 8))) +
+  scale_shape_manual(name = "", values = c(1, 16)) +
+  scale_color_discrete(guide = "none") +
+  geom_smooth(data = filter(wdall, point_type == "2020"), se = TRUE) + 
+  geom_smooth(data = filter(wdall, point_type != "2020"), linetype = "dashed", se = FALSE) +
+  facet_wrap(vars(country)) 
