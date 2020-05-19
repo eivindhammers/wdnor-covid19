@@ -16,7 +16,7 @@ thematic_on(
 # All countries
 wdall <- bind_rows(wdnor, wdswe, wdfin, wddnk) %>%
   filter(year >= 2015,
-         week <= isoweek(Sys.Date()) - 2)
+         year < 2020 | week <= isoweek(Sys.Date()) - 2)
 
 # Check latest weeks of data for each country
 wdall %>% 
