@@ -6,7 +6,7 @@ library(ggplot2)
 library(readxl)
 library(thematic)
 
-source("get_data.R")
+source("get_data.R", encoding = "UTF-8")
 
 thematic_on(
   bg = "#222222", fg = "white", accent = "#0CE3AC",
