@@ -79,7 +79,8 @@ wdswe <- read_xlsx(tmp, sheet = "Tabell 1", skip = 6) %>%
          year >= 2015) %>%
   group_by(year, week, point_type, country) %>%
   summarize(deaths = sum(deaths, na.rm = TRUE)) %>%
-  filter(deaths != 0) %>%
+  filter(deaths != 0,
+         week < isoweek(Sys.Date() - 14)) %>%
   left_join(popswe, by = "year") %>%
   mutate(deaths_per100k = 100000 * deaths / population)
 
